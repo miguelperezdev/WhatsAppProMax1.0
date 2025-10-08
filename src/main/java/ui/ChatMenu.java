@@ -1,7 +1,6 @@
 package ui;
 
 import service.ChatManager;
-import model.User;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,7 +12,7 @@ public class ChatMenu {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         System.out.println("=== CHAT - GESTIÓN DE GRUPOS ===");
-        User currentUser = null;
+        String currentUser = null;
 
         while (true) {
             System.out.println("\n1. Crear usuario");
@@ -34,18 +33,30 @@ public class ChatMenu {
                 }
                 case "2" -> {
                     System.out.print("Nombre del grupo: ");
-                    manager.createGroup(reader.readLine());
+                    if (currentUser != null) {
+                        manager.createGroup(reader.readLine(), currentUser);
+                    } else {
+                        System.out.println("Debes crear un usuario primero");
+                    }
                 }
                 case "3" -> {
                     System.out.print("Nombre del grupo: ");
                     String g = reader.readLine();
-                    manager.addUserToGroup(g, currentUser);
+                    if (currentUser != null) {
+                        manager.addUserToGroup(g, currentUser);
+                    } else {
+                        System.out.println("Debes crear un usuario primero");
+                    }
                 }
                 case "4" -> {
                     System.out.print("Grupo destino: ");
                     String g = reader.readLine();
                     System.out.print("Mensaje: ");
-                    manager.sendMessage(g, currentUser, reader.readLine());
+                    if (currentUser != null) {
+                        manager.sendMessage(g, currentUser, reader.readLine());
+                    } else {
+                        System.out.println("Debes crear un usuario primero");
+                    }
                 }
                 case "5" -> {
                     System.out.print("Nombre del grupo: ");

@@ -30,11 +30,12 @@ public class TCPConnection {
     }
 
 
-    //ACOMODAR ESTA PARTE PQ NO DE NULL EN LA INSTANCIA
 
-    public static TCPConnection getInstance(MainClient mainClient, Socket socket) {
-        return null;
+    public static TCPConnection getInstance(MainClient mainClient, Socket socket) throws IOException {
+        return new TCPConnection(socket, mainClient);
     }
+
+
 
     private void startListening() {
         listenerThread = new Thread(() -> {

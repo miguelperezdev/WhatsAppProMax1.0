@@ -265,26 +265,19 @@ public class ChatManager {
         return status;
     }
 
-    /**
-     * Limpia todos los datos (útil para testing)
-     */
+
     public void clearAllData() {
         onlineUsers.clear();
         groups.clear();
         System.out.println("🧹 Todos los datos han sido limpiados");
     }
 
-    /**
-     * Verifica si un usuario es miembro de un grupo
-     */
+
     public boolean isUserInGroup(String username, String groupName) {
         Group group = groups.get(groupName);
         return group != null && group.hasMember(username);
     }
 
-    /**
-     * Obtiene los grupos a los que pertenece un usuario
-     */
     public List<String> getUserGroups(String username) {
         List<String> userGroups = new ArrayList<>();
         for (Map.Entry<String, Group> entry : groups.entrySet()) {
@@ -294,4 +287,58 @@ public class ChatManager {
         }
         return userGroups;
     }
+
+
+    public void showGroups() {
+        System.out.println("\n=== GRUPOS DISPONIBLES ===");
+        if (groups.isEmpty()) {
+            System.out.println("No hay grupos creados");
+        } else {
+            for (Map.Entry<String, Group> entry : groups.entrySet()) {
+                String groupName = entry.getKey();
+                Group group = entry.getValue();
+                System.out.println(" " + groupName + " (" + group.getMemberCount() + " miembros)");
+            }
+        }
+        System.out.println("========================\n");
+    }
+
+    public String createUser(String username) {
+        if (loginUser(username)) {
+            return username;
+        }
+        return null;
+    }
+
+    public boolean addUserToGroup(String groupName, String username) {
+        return joinGroup(groupName, username);
+    }
+
+    public void sendMessage(String groupName, String username, String content) {
+        if (groupExists(groupName) && isUserInGroup(username, groupName)) {
+            Message msg = new Message(username, groupName, content, true);
+            saveTextMessage(msg);
+            System.out.println(" Mensaje enviado a grupo " + groupName);
+        } else {
+            System.out.println(" Error: Usuario no pertenece al grupo o grupo no existe");
+        }
+    }
+
+    public void showHistory(String groupName) {
+        if (groupExists(groupName)) {
+            List<Message> messages = getMessageHistory(groupName, true);
+            System.out.println("\n=== HISTORIAL DE " + groupName + " ===");
+            if (messages.isEmpty()) {
+                System.out.println("No hay mensajes");
+            } else {
+                for (Message msg : messages) {
+                    System.out.println(msg);
+                }
+            }
+            System.out.println("================================\n");
+        } else {
+            System.out.println(" Grupo no existe");
+        }
+    }
+
 }

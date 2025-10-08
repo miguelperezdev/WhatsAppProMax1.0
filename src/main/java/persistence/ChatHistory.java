@@ -107,12 +107,15 @@ public class ChatHistory {
             Map<String, String> data = parseLine(line);
             // Para audio, solo guardamos metadatos, los datos binarios se guardan aparte
             AudioMessage audioMessage = new AudioMessage(
+                    data.get("id"),
                     data.get("from"),
                     data.get("to"),
-                    new byte[0], // Datos vacíos, se cargan por separado
                     Boolean.parseBoolean(data.get("isGroup")),
+                    Long.parseLong(data.get("timestamp")),
+                    Integer.parseInt(data.get("audioSize")),
                     Integer.parseInt(data.get("duration"))
             );
+
             return audioMessage;
         } catch (Exception e) {
             System.err.println("Error deserializando audio message: " + e.getMessage());
