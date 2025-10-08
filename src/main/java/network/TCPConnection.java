@@ -1,74 +1,107 @@
 package network;
 
+import ui.MainClient;
+
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 
-public class TCPConnection extends Thread {
+public class TCPConnection {
+    private Socket socket;
+    private BufferedReader reader;
+    private PrintWriter writer;
+    private TCPConnectionListener listener;
+    private boolean connected;
+    private Thread listenerThread;
 
-    private static TCPConnection instance;
-    private final Socket socket;
-    private final BufferedReader in;
-    private final BufferedWriter out;
-    private final TCPConnectionListener eventListener;
-    private volatile boolean running = true;
-
-    // 🔒 Constructor privado (Singleton)
-    private TCPConnection(TCPConnectionListener eventListener, Socket socket) throws IOException {
-        this.eventListener = eventListener;
+    // Constructor con Listener
+    public TCPConnection(Socket socket, TCPConnectionListener listener) throws IOException {
         this.socket = socket;
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        start();
+        this.listener = listener;
+        this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.writer = new PrintWriter(socket.getOutputStream(), true);
+        this.connected = true;
+
+        startListening();
     }
 
-    // 🧠 Método estático para obtener instancia única
-    public static synchronized TCPConnection getInstance(TCPConnectionListener eventListener, Socket socket) throws IOException {
-        if (instance == null) {
-            instance = new TCPConnection(eventListener, socket);
+    // Constructor para cliente que se conecta a servidor
+    public TCPConnection(TCPConnectionListener listener, String ip, int port) throws IOException {
+        this(new Socket(ip, port), listener);
+    }
+
+
+    //ACOMODAR ESTA PARTE PQ NO DE NULL EN LA INSTANCIA
+
+    public static TCPConnection getInstance(MainClient mainClient, Socket socket) {
+        return null;
+    }
+
+    private void startListening() {
+        listenerThread = new Thread(() -> {
+            try {
+                // Notificar que la conexión está lista
+                if (listener != null) {
+                    listener.onConnectionReady(this);
+                }
+
+                String message;
+                while (connected && (message = reader.readLine()) != null) {
+                    if (listener != null) {
+                        listener.onReceiveString(this, message);
+                    }
+                }
+            } catch (IOException e) {
+                if (connected && listener != null) {
+                    listener.onException(this, e);
+                }
+            } finally {
+                disconnect();
+            }
+        });
+        listenerThread.setDaemon(true);
+        listenerThread.start();
+    }
+
+    public void sendMessage(String message) {
+        if (connected && writer != null) {
+            writer.println(message);
         }
-        return instance;
     }
 
-    // 📨 Enviar mensaje a través del socket
-    public synchronized void sendMessage(String message) {
+    public void disconnect() {
+        connected = false;
         try {
-            out.write(message + "\r\n");
-            out.flush();
-        } catch (IOException e) {
-            eventListener.onException(this, e);
-            disconnect();
-        }
-    }
+            if (reader != null) reader.close();
+            if (writer != null) writer.close();
+            if (socket != null) socket.close();
+            if (listenerThread != null && listenerThread.isAlive()) {
+                listenerThread.interrupt();
+            }
 
-    // 🔄 Escuchar mensajes entrantes
-    @Override
-    public void run() {
-        try {
-            eventListener.onConnectionReady(this);
-            while (running) {
-                String message = in.readLine();
-                if (message == null) break;
-                eventListener.onReceiveString(this, message);
+            // Notificar desconexión
+            if (listener != null) {
+                listener.onDisconnect(this);
             }
         } catch (IOException e) {
-            eventListener.onException(this, e);
-        } finally {
-            eventListener.onDisconnect(this);
+            if (listener != null) {
+                listener.onException(this, e);
+            }
         }
     }
 
-    // 🔚 Cerrar conexión
-    public synchronized void disconnect() {
-        running = false;
-        try {
-            socket.close();
-        } catch (IOException e) {
-            eventListener.onException(this, e);
+    public boolean isConnected() {
+        return connected && socket != null && !socket.isClosed();
+    }
+
+    public String getRemoteAddress() {
+        if (socket != null) {
+            return socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
         }
+        return "Disconnected";
     }
 
     @Override
     public String toString() {
-        return "TCPConnection: " + socket.getInetAddress() + ":" + socket.getPort();
+        return getRemoteAddress();
     }
 }
