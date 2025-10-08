@@ -5,8 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhatsAppProMax.iml" filepath="$PROJECT_DIR$/.idea/modules/WhatsAppProMax.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhatsAppProMax.main.iml" filepath="$PROJECT_DIR$/.idea/modules/WhatsAppProMax.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhatsAppProMax.test.iml" filepath="$PROJECT_DIR$/.idea/modules/WhatsAppProMax.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat.WhatsAppProMax.main.iml" filepath="$PROJECT_DIR$/.idea/modules/chat.WhatsAppProMax.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat.WhatsAppProMax.test.iml" filepath="$PROJECT_DIR$/.idea/modules/chat.WhatsAppProMax.test.iml" />
     </modules>
   </component>
 </project>

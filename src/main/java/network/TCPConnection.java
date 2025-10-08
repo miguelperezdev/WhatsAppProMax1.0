@@ -1,5 +1,7 @@
 package network;
 
+import ui.MainClient;
+
 import java.io.*;
 import java.net.*;
 
@@ -25,6 +27,13 @@ public class TCPConnection {
     // Constructor para cliente que se conecta a servidor
     public TCPConnection(TCPConnectionListener listener, String ip, int port) throws IOException {
         this(new Socket(ip, port), listener);
+    }
+
+
+    //ACOMODAR ESTA PARTE PQ NO DE NULL EN LA INSTANCIA
+
+    public static TCPConnection getInstance(MainClient mainClient, Socket socket) {
+        return null;
     }
 
     private void startListening() {

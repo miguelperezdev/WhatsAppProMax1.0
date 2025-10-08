@@ -5,7 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bff2c4e5-391a-4c07-b3cc-791c6a643036" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/audio/hola.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/service/CallService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/util/AudioPlayer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/util/AudioRecorder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/ui/MainClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/ui/MainClient.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ui/MainClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/MainClient.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,8 +58,9 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
     "Gradle.WhatsAppProMax1.0 [:ui.MainServer.main()].executor": "Run",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "Merging main",
     "node.js.selected.package.tslint": "(autodetect)"
   }
 }]]></component>
