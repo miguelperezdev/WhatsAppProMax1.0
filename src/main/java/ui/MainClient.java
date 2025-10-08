@@ -73,7 +73,7 @@ public class MainClient implements TCPConnectionListener {
         System.out.println("=".repeat(50));
         System.out.println("Comandos disponibles:");
         System.out.println("Texto normal: Envía mensaje de chat");
-        System.out.println("/grabar <nombre>: Graba nota de voz");
+        System.out.println("/grabar nombre: Graba nota de voz");
         System.out.println("/reproducir <nombre>: Reproduce nota de voz");
         System.out.println("/llamar <usuario>: Inicia llamada");
         System.out.println("/colgar: Termina llamada");
