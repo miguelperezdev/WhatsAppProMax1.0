@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat TCP vía Proxy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+
+    <h1>💬 Chat vía Proxy</h1>
+
+    <form id="login-form" class="card">
+      <h2>Iniciar sesión</h2>
+      <input id="username" type="text" placeholder="Tu nombre de usuario" required>
+      <button type="submit">Ingresar</button>
+      <p id="login-status"></p>
+    </form>
+
+    <div id="chat-section" class="card hidden">
+      <h2>Enviar mensaje privado</h2>
+      <form id="message-form">
+          <label for="to-user">Destinatario:</label>
+          <input id="to-user" type="text" placeholder="Ej: bob" required>
+
+          <label for="message">Mensaje:</label>
+          <textarea id="message" rows="3" placeholder="Escribe algo..." required></textarea>
+
+          <button type="submit">Enviar</button>
+      </form>
+
+      <h3>📜 Historial</h3>
+      <div id="chat-log"></div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
