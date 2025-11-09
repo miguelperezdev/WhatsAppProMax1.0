@@ -33,34 +33,14 @@ public class TCPConnection {
         this.listener = listener;
         this.connected = true;
 
-        // Intentamos crear Object streams. Si falla, activamos modo texto.
-        try {
-            // IMPORTANTE: Crear ObjectOutputStream primero evita deadlock con algunos clientes
-            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            this.objectOutputStream.flush(); // asegurar encabezado
-            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
-            this.textMode = false;
-        } catch (IOException e) {
-            // No fue posible crear object streams -> fallback a modo texto
-            // Cerramos cualquier stream parcialmente abierto y creamos reader/writer
-            this.textMode = true;
-            try {
-                if (this.objectOutputStream != null) {
-                    try { this.objectOutputStream.close(); } catch (IOException ignored) {}
-                    this.objectOutputStream = null;
-                }
-                if (this.objectInputStream != null) {
-                    try { this.objectInputStream.close(); } catch (IOException ignored) {}
-                    this.objectInputStream = null;
-                }
-            } catch (Exception ignored) {}
-
-            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-        }
+        // ⚠️ Forzamos modo texto SIEMPRE para compatibilidad con Node
+        this.textMode = true;
+        this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
 
         startListening();
     }
+
 
     // Constructor auxiliar que crea socket cliente (si se usa)
     public TCPConnection(TCPConnectionListener listener, String ip, int port) throws IOException {
