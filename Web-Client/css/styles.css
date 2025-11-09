@@ -4,71 +4,203 @@
 }
 
 body {
-  background: #f4f7fb;
+  /* WhatsApp-like soft green gradient background */
+  background: linear-gradient(180deg, #e8f6ef 0%, #dff0ea 100%);
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
   margin: 0;
-  padding-top: 40px;
+  padding-top: 18px;
+  color: #0b2b22;
 }
 
 .container {
-  width: 400px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px 25px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 1000px;
+  max-width: calc(100% - 40px);
+  background: transparent; /* let inner cards show their own backgrounds */
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 30px rgba(20,30,40,0.06);
+}
+/* Layout */
+.app-header {
+  text-align: center;
+  padding: 8px 8px;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #333;
+.app-header h1 {
+  margin: 0;
+  font-size: 18px;
+  color: #ffffff;
+  background: #075e54; /* WhatsApp dark green */
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.app-main {
+  display: flex;
+  gap: 12px;
+}
+
+.sidebar {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #075e54; /* dark sidebar like WhatsApp */
+  border-radius: 10px;
+  padding: 12px;
+  color: #fff;
+}
+
+/* Make cards that live inside the sidebar blend with the dark sidebar
+   (contacts list should appear on the dark background, not on a white card). */
+.sidebar .card {
+  background: transparent;
+  box-shadow: none;
+  padding: 8px 0 12px 0;
+}
+
+/* Specific tweaks for the contacts card so items and buttons are visible */
+.contacts.card .section-header h3,
+.contacts.card .section-header h4 {
+  color: #fff;
+  margin: 0;
+}
+.contacts.card .small-btn {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.contacts.card .contacts-list { padding-top: 8px; }
+.contacts.card .create-group { background: rgba(255,255,255,0.06); padding:10px; border-radius:8px; }
+
+.chat {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 520px;
 }
 
 .card {
-  margin-bottom: 25px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(20,30,40,0.04);
 }
 
+/* Forms */
 .card input, .card textarea {
   width: 100%;
   padding: 10px;
-  margin: 8px 0 15px 0;
+  margin: 8px 0 12px 0;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #e6e9ee;
+  background: #fbfdff;
 }
 
 button {
-  width: 100%;
-  padding: 10px;
-  background: #0078d7;
-  color: white;
-  font-size: 16px;
+  padding: 10px 14px;
+  background: #25d366; /* WhatsApp bright green */
+  color: #063722;
+  font-weight: 600;
+  font-size: 14px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s;
+  box-shadow: 0 2px 6px rgba(37,211,102,0.18);
 }
 
-button:hover {
-  background: #005fa3;
-}
-
-#chat-log {
-  border: 1px solid #ddd;
+.small-btn {
+  padding: 6px 8px;
+  font-size: 13px;
   border-radius: 8px;
-  background: #fafafa;
-  padding: 10px;
-  height: 200px;
-  overflow-y: auto;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #f3f4f6; /* default light background for small buttons outside sidebar */
+  color: #0b2b22;
 }
 
-.hidden {
-  display: none;
+.small-btn.alt { background: #f59e0b; }
+
+.alt {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
 }
 
-#login-status {
-  font-size: 0.9em;
-  color: #555;
+/* Sidebar-specific button styles for contrast */
+.sidebar button {
+  /* Buttons inside the dark sidebar must be clearly visible */
+  background: rgba(0,0,0,0.16);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: none;
+}
+
+/* Ensure highlighted small alt button shows clearly */
+.small-btn.alt {
+  background: #f59e0b;
+  color: #fff;
+  border: none;
+}
+
+/* Create-group sits on translucent white - make its buttons readable */
+.sidebar .create-group button {
+  /* create-group lives in the sidebar; ensure strong contrast there */
+  background: #ffffff;
+  color: #075e54;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.sidebar .create-group button.alt {
+  background: #efefef;
+  color: #333;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Message form send button - keep green but slightly darker for contrast */
+.message-actions button {
+  background: #20c659;
+  color: #063722;
+  box-shadow: 0 2px 6px rgba(32,198,89,0.16);
+}
+
+/* Ensure small buttons inside the sidebar keep sidebar styling */
+.sidebar .small-btn { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.06); }
+
+.muted { color: #6b7280; font-size: 13px; }
+
+/* Contacts */
+.section-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.contacts-list { list-style:none; padding: 8px 0; margin:0; max-height: 260px; overflow:auto; }
+.contacts-list li { padding: 10px; border-radius: 8px; cursor: pointer; display:flex; align-items:center; gap:10px; color:#fff; }
+.contacts-list li:hover { background: rgba(255,255,255,0.06); }
+.avatar { width:40px; height:40px; border-radius:50%; background:#fff; color:#075e54; display:inline-flex; align-items:center; justify-content:center; font-weight:700; border:2px solid rgba(255,255,255,0.12); }
+.contact-name { font-weight:700; color:#fff; }
+.contact-meta { font-size:12px; color:rgba(255,255,255,0.8); }
+
+/* Chat area */
+.chat-header { display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:8px; background: linear-gradient(90deg,#128c7e,#075e54); border-radius:8px; color:#fff; padding:12px; }
+.chat-log { flex:1 1 auto; overflow:auto; padding:16px; background: radial-gradient(circle at 10% 10%, rgba(0,0,0,0.02) 0,#ece5dd 2px, transparent 3px), #ece5dd; border-radius:8px; }
+.message { max-width:70%; margin-bottom:10px; padding:10px 12px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.04); }
+.message.me { background: #dcf8c6; color:#063722; margin-left:auto; }
+.message.their { background:#ffffff; color:#111827; margin-right:auto; }
+.message .meta { font-size:11px; color:rgba(0,0,0,0.45); margin-top:6px; display:block; }
+.message.their .meta { color:#6b7280; }
+
+.message-form { display:flex; gap:8px; align-items:flex-end; background:#ffffff; padding:10px; border-radius:10px; box-shadow:0 6px 18px rgba(3,22,18,0.04); }
+.message-form textarea { resize:none; height:56px; border:1px solid #e6e6e6; }
+.message-actions { display:flex; gap:8px; }
+
+.chat.card.hidden { display: none; }
+
+.create-group { background: rgba(255,255,255,0.06); padding:10px; border-radius:8px; }
+
+.hidden { display: none; }
+
+@media (max-width: 900px) {
+  .container { width: 100%; padding:10px; }
+  .sidebar { display:none; }
 }

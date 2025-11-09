@@ -1,99 +1,78 @@
 import express from "express";
 import net from "net";
 import bodyParser from "body-parser";
-import cors from "cors"; // Importante para que tu cliente web pueda conectarse
+import cors from "cors";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+console.log('=== PROXY STARTUP ===');
+console.log('PID:', process.pid);
+console.log('__filename:', __filename);
+console.log('__dirname:', __dirname);
+console.log('Timestamp:', new Date().toISOString());
+
+const LOG_PATH = path.resolve(__dirname, '..', '..', 'proxy.log');
+function appendLog(...args){
+    try{
+        const line = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ') + '\n';
+        fs.appendFileSync(LOG_PATH, new Date().toISOString() + ' ' + line);
+    }catch(e){ }
+}
+appendLog('PROXY STARTUP', 'PID:', process.pid, '__filename:', __filename);
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught exception:', err);
+    appendLog('Uncaught exception:', err && err.stack ? err.stack : String(err));
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled rejection:', reason);
+    appendLog('Unhandled rejection:', reason && reason.stack ? reason.stack : String(reason));
+});
 
 const app = express();
-app.use(cors()); // Habilita CORS
+
+// Configuración detallada de CORS
+app.use(cors({
+    origin: 'http://localhost:8081',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true
+}));
+
+// Middleware para procesar JSON
 app.use(bodyParser.json());
+app.use((req, res, next) => { console.log(`${req.method} ${req.path}`, req.body); next(); });
 
 const TCP_HOST = "localhost";
 const TCP_PORT = 5000;
 
-// MAPA DE CONEXIONES ACTIVAS
-// Clave: username, Valor: { socket: net.Socket, responseQueue: Array }
-// 'responseQueue' guardará las promesas (resolve/reject) de las peticiones HTTP que esperan respuesta de Java
 const activeConnections = new Map();
-
-// Función auxiliar para conectar un nuevo usuario
 function connectUser(username) {
     return new Promise((resolve, reject) => {
-        if (activeConnections.has(username)) {
-            // Si ya existe una conexión, reúsala (o ciérrala y abre una nueva, según prefieras)
-            // Por simplicidad, aquí la reusamos, aunque lo ideal sería verificar si sigue viva.
-             resolve(activeConnections.get(username));
-             return;
-        }
-
+        if (activeConnections.has(username)) { resolve(activeConnections.get(username)); return; }
         const socket = new net.Socket();
-        const userSession = {
-            socket: socket,
-            responseQueue: [] // Cola para manejar respuestas asíncronas
-        };
-
-        socket.connect(TCP_PORT, TCP_HOST, () => {
-            console.log(`[${username}] Conectado al servidor Java`);
-            // Enviamos el login inmediatamente al conectar
-            socket.write(`type:login|username:${username}`);
-        });
-
+        const userSession = { socket: socket, responseQueue: [] };
+        socket.connect(TCP_PORT, TCP_HOST, () => { console.log(`[${username}] Conectado al servidor Java`); socket.write(`type:login|username:${username}\n`); });
         socket.on('data', (data) => {
             const message = data.toString();
             console.log(`[${username}] Recibido de Java: ${message}`);
-
-            // PROCESAMIENTO DE RESPUESTAS
-            // Aquí viene la parte delicada: saber qué respuesta corresponde a qué petición HTTP.
-            // Una estrategia simple es asumir que Java responde en orden (FIFO).
-
-            if (message.includes('type:login_success')) {
-                 activeConnections.set(username, userSession);
-                 resolve(userSession);
-            } else if (message.includes('type:login_error')) {
-                 socket.end(); // Cerramos si falló el login
-                 reject(new Error(message));
-            } else {
-                // Para cualquier otra respuesta, buscamos quién la estaba esperando
-                if (userSession.responseQueue.length > 0) {
-                    const { resolve: httpResolve } = userSession.responseQueue.shift(); // Sacamos al primero de la fila
-                    httpResolve(message);
-                } else {
-                    // Si nadie la espera, es una notificación push (ej: mensaje recibido de otro usuario)
-                    // Por ahora lo ignoramos o solo lo logueamos. En el futuro, esto iría por WebSocket al frontend.
-                    console.log(`[${username}] Notificación push ignorada por ahora: ${message}`);
-                }
-            }
+            if (message.includes('type:login_success')) { activeConnections.set(username, userSession); resolve(userSession); }
+            else if (message.includes('type:login_error')) { socket.end(); reject(new Error(message)); }
+            else { if (userSession.responseQueue.length > 0) { const { resolve: httpResolve } = userSession.responseQueue.shift(); httpResolve(message); } else { console.log(`[${username}] Notificación push ignorada por ahora: ${message}`); } }
         });
-
-        socket.on('error', (err) => {
-            console.error(`[${username}] Error de socket: ${err.message}`);
-            activeConnections.delete(username);
-            reject(err);
-             // También deberíamos rechazar todas las promesas en la cola
-             userSession.responseQueue.forEach(({ reject: httpReject }) => httpReject(err));
-             userSession.responseQueue = [];
-        });
-
-        socket.on('close', () => {
-            console.log(`[${username}] Conexión cerrada`);
-            activeConnections.delete(username);
-        });
+        socket.on('error', (err) => { console.error(`[${username}] Error de socket: ${err.message}`); activeConnections.delete(username); reject(err); userSession.responseQueue.forEach(({ reject: httpReject }) => httpReject(err)); userSession.responseQueue = []; });
+        socket.on('close', () => { console.log(`[${username}] Conexión cerrada`); activeConnections.delete(username); });
     });
 }
 
-// Función auxiliar para enviar un comando y esperar respuesta
 function sendCommand(username, command) {
     return new Promise((resolve, reject) => {
         const session = activeConnections.get(username);
-        if (!session) {
-            reject(new Error("Usuario no conectado. Debe hacer login primero."));
-            return;
-        }
-
-        // Agregamos nuestra promesa a la cola de espera de este usuario
+        if (!session) { reject(new Error("Usuario no conectado. Debe hacer login primero.")); return; }
         session.responseQueue.push({ resolve, reject });
-        
-        // Enviamos el comando
-        session.socket.write(command);
+        session.socket.write(command + "\n");
     });
 }
 
@@ -151,6 +130,11 @@ app.get("/api/groups/:username", async (req, res) => {
     } catch (err) {
         res.status(500).json({ ok: false, error: err.message });
     }
+});
+
+// Endpoint de prueba
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'Servidor proxy funcionando correctamente' });
 });
 
 // INICIAR SERVIDOR
