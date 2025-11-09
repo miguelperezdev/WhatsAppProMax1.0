@@ -1,98 +1,143 @@
 package network;
 
 import java.io.*;
-import java.net.*;
+import java.net.Socket;
 
+/**
+ * TCPConnection compatible con:
+ * - clientes que usan ObjectInputStream/ObjectOutputStream (modo objeto)
+ * - clientes que usan texto (BufferedReader / PrintWriter) (modo texto)
+ *
+ * Detecta el modo en el arranque y luego procesa mensajes acorde a ese modo.
+ */
 public class TCPConnection {
-    private Socket socket;
+    private final Socket socket;
 
+    // Streams para modo objeto
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
 
+    // Streams para modo texto (fallback)
+    private BufferedReader reader;
+    private PrintWriter writer;
+
     private TCPConnectionListener listener;
-    private boolean connected;
+    private volatile boolean connected;
     private Thread listenerThread;
 
-    public Socket getSocket() {
-        return socket;
-    }
-
-    public void setSocket(Socket socket) {
-        this.socket = socket;
-    }
+    // true si estamos en modo texto, false si estamos en modo objeto
+    private boolean textMode = false;
 
     public TCPConnection(Socket socket, TCPConnectionListener listener) throws IOException {
         this.socket = socket;
         this.listener = listener;
-        this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-        this.objectInputStream = new ObjectInputStream(socket.getInputStream());
-
         this.connected = true;
+
+        // Intentamos crear Object streams. Si falla, activamos modo texto.
+        try {
+            // IMPORTANTE: Crear ObjectOutputStream primero evita deadlock con algunos clientes
+            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.objectOutputStream.flush(); // asegurar encabezado
+            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
+            this.textMode = false;
+        } catch (IOException e) {
+            // No fue posible crear object streams -> fallback a modo texto
+            // Cerramos cualquier stream parcialmente abierto y creamos reader/writer
+            this.textMode = true;
+            try {
+                if (this.objectOutputStream != null) {
+                    try { this.objectOutputStream.close(); } catch (IOException ignored) {}
+                    this.objectOutputStream = null;
+                }
+                if (this.objectInputStream != null) {
+                    try { this.objectInputStream.close(); } catch (IOException ignored) {}
+                    this.objectInputStream = null;
+                }
+            } catch (Exception ignored) {}
+
+            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+        }
+
         startListening();
     }
 
+    // Constructor auxiliar que crea socket cliente (si se usa)
     public TCPConnection(TCPConnectionListener listener, String ip, int port) throws IOException {
         this(new Socket(ip, port), listener);
     }
 
-
     private void startListening() {
         listenerThread = new Thread(() -> {
             try {
+                // Notificar que la conexión está lista
                 if (listener != null) {
                     listener.onConnectionReady(this);
                 }
 
-                Object receivedObject;
-                while (connected && (receivedObject = objectInputStream.readObject()) != null) {
-                    if (listener != null) {
-
-                        listener.onReceiveObject(this, receivedObject);
+                if (!textMode) {
+                    // modo objeto: leer objetos
+                    Object obj;
+                    while (connected && (obj = objectInputStream.readObject()) != null) {
+                        if (listener != null) listener.onReceiveObject(this, obj);
+                    }
+                } else {
+                    // modo texto: leer líneas
+                    String line;
+                    while (connected && (line = reader.readLine()) != null) {
+                        if (listener != null) listener.onReceiveObject(this, line);
                     }
                 }
-            } catch (IOException | ClassNotFoundException e) { // --> CAMBIO: Se añade ClassNotFoundException
+            } catch (IOException | ClassNotFoundException e) {
                 if (connected && listener != null) {
                     listener.onException(this, e);
                 }
             } finally {
-                disconnect();
+                disconnect(); // asegura limpieza y onDisconnect
             }
         });
         listenerThread.setDaemon(true);
         listenerThread.start();
     }
 
+    /**
+     * Envía un objeto o texto al cliente, respetando el modo del cliente
+     * Si el cliente está en modo texto y el objeto no es String, lo convierte a String via toString()
+     */
+    public synchronized void sendObject(Serializable object) {
+        if (!connected) return;
 
-    public void sendObject(java.io.Serializable object) {
-        if (connected && objectOutputStream != null) {
-            try {
+        try {
+            if (!textMode) {
+                // modo objeto: enviar como objeto serializado
                 objectOutputStream.writeObject(object);
                 objectOutputStream.flush();
-            } catch (IOException e) {
-                if (listener != null) {
-                    listener.onException(this, e);
+            } else {
+                // modo texto: si es String, enviar tal cual; si no, enviar toString()
+                if (object instanceof String s) {
+                    writer.println(s);
+                } else {
+                    // Puedes mejorar aquí y usar JSON si quieres más estructura
+                    writer.println(object.toString());
                 }
+                writer.flush();
             }
+        } catch (IOException e) {
+            if (listener != null) listener.onException(this, e);
         }
     }
 
-    public void disconnect() {
+    public synchronized void disconnect() {
         connected = false;
         try {
-            if (objectOutputStream != null) objectOutputStream.close();
-            if (objectInputStream != null) objectInputStream.close();
-            if (socket != null) socket.close();
-            if (listenerThread != null && listenerThread.isAlive()) {
-                listenerThread.interrupt();
-            }
-
-            if (listener != null) {
-                listener.onDisconnect(this);
-            }
-        } catch (IOException e) {
-            if (listener != null) {
-                listener.onException(this, e);
-            }
+            try { if (objectOutputStream != null) objectOutputStream.close(); } catch (IOException ignored) {}
+            try { if (objectInputStream != null) objectInputStream.close(); } catch (IOException ignored) {}
+            try { if (reader != null) reader.close(); } catch (IOException ignored) {}
+            try { if (writer != null) writer.close(); } catch (Exception ignored) {}
+            try { if (socket != null && !socket.isClosed()) socket.close(); } catch (IOException ignored) {}
+            if (listener != null) listener.onDisconnect(this);
+        } catch (Exception e) {
+            if (listener != null) listener.onException(this, e instanceof Exception ? (Exception) e : new Exception(e));
         }
     }
 
@@ -105,6 +150,10 @@ public class TCPConnection {
             return socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
         }
         return "Disconnected";
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 
     @Override
