@@ -95,7 +95,7 @@ app.post("/api/login", async (req, res) => {
 app.post("/api/sendMessage", async (req, res) => {
     const { from, to, content } = req.body;
     const cmd = `type:private_message|from:${from}|to:${to}|content:${content}`;
-    
+
     try {
         // Esperamos la confirmación "type:message_sent_ok" que AÑADISTE a tu servidor Java
         const response = await sendCommand(from, cmd);
@@ -138,6 +138,8 @@ app.get('/api/test', (req, res) => {
 });
 
 // INICIAR SERVIDOR
+// Servir el cliente web (frontend)
+app.use(express.static(path.join(__dirname, '..', '..', '..', 'Web-Client')));
 app.listen(3000, () => {
     console.log("Proxy stateful corriendo en http://localhost:3000");
 });

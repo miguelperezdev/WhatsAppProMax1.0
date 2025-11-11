@@ -1,0 +1,3 @@
+id:28d41a5a-3cba-48d7-ac6e-7abf0f5bd34c|from:miguel|to:type:groups_list|content:hola|timestamp:1762878348756|isGroup:false
+id:878dfb8a-2b4a-4113-998f-5518dc58a10e|from:carlos|to:type:groups_list|content:hols|timestamp:1762878348756|isGroup:false
+id:97c500de-f34e-4a1d-9c13-c54f99242de7|from:miguel|to:type:groups_list|content:hola|timestamp:1762878348754|isGroup:false

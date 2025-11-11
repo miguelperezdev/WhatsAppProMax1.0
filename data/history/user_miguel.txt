@@ -1,0 +1,2 @@
+id:bf5f7cf3-16da-4083-b534-0b1eee5c1a44|from:carlos|to:miguel|content:kio|timestamp:1762878334870|isGroup:false
+id:c7b553d5-9134-4485-8639-42226358fea0|from:carlos|to:miguel|content:hola|timestamp:1762878334868|isGroup:false
