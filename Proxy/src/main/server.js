@@ -323,22 +323,23 @@ app.get("/api/history/:target", async (req, res) => {
 
 app.post("/api/joinGroup", async (req, res) => {
   const { username, group_name } = req.body
-  console.log(`POST /api/joinGroup - user: ${username}, group: ${group_name}`)
-
-  if (!username || !group_name) {
-    return res.status(400).json({ ok: false, error: "Faltan parámetros" })
-  }
-
-  const cmd = `type:join_group|username:${username}|group_name:${group_name}`
-
   try {
-    const response = await sendCommand(username, cmd)
-    res.json({ ok: true, java_response: response })
+    const result = await sendToJava(`type:join_group|username:${username}|group:${group_name}`)
+
+    // 🔥 Nuevo: obtener lista actualizada de miembros del grupo
+    const membersResult = await sendToJava(`type:get_group_members|group:${group_name}`)
+
+    res.json({
+      ok: true,
+      message: result,
+      members: membersResult.java_response || [],
+    })
   } catch (err) {
-    console.error(`Error joining group:`, err.message)
-    res.status(500).json({ ok: false, error: err.message })
+    console.error("Error en joinGroup:", err)
+    res.status(500).send("Error al unirse al grupo")
   }
 })
+
 
 app.get("/api/onlineUsers/:username", async (req, res) => {
   const { username } = req.params
