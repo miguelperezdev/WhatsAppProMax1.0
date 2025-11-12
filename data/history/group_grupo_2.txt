@@ -1,0 +1,3 @@
+id:264ed2ac-a23e-429f-8470-529a8c6f708b|from:3|to:grupo 2|content:hi|timestamp:1762919326140|isGroup:true
+id:8e0a7d9e-31c5-48b6-9acd-0dab238ec6e8|from:2|to:grupo 2|content:1|timestamp:1762919326140|isGroup:true
+id:4d1b62c3-a402-4a75-bfa7-1c6330f900fe|from:2|to:grupo 2|content:1|timestamp:1762919326139|isGroup:true

@@ -1,0 +1,18 @@
+id:31bfb31f-fcc5-40e2-9610-14777a12c55f|from:2|to:grupo 1|content:hola|timestamp:1762921455412|isGroup:true
+id:cd56e3d6-b7cf-481e-843f-a5fb2d5ba2ac|from:1|to:grupo 1|content:hola|timestamp:1762921455413|isGroup:true
+id:26a7481e-03c5-4700-8cf1-92d4aaf95799|from:2|to:grupo 1|content:como vas?|timestamp:1762921455413|isGroup:true
+id:7e175c1b-f1f8-4700-a76c-52ac007b6d13|from:1|to:grupo 1|content:bioen|timestamp:1762921455413|isGroup:true
+id:955c3d04-f05c-450f-b756-756c31f09a8f|from:1|to:grupo 1|content:hola?|timestamp:1762921455413|isGroup:true
+id:be44250b-5343-4eef-a529-0c1fb8bc3ea0|from:2|to:grupo 1|content:hola|timestamp:1762921455413|isGroup:true
+id:e099f6c3-195c-4087-845e-fa62fea26d1e|from:1|to:grupo 1|content:hola|timestamp:1762921455414|isGroup:true
+id:9375100a-5e10-40a3-930e-7a32033c76f1|from:1|to:grupo 1|content:hola|timestamp:1762921455414|isGroup:true
+id:a3703933-75ad-46c9-aec7-f71377d85436|from:1|to:grupo 1|content:hola|timestamp:1762921455414|isGroup:true
+id:ebc39f6e-fd6c-4c53-a611-de408c399ed2|from:1|to:grupo 1|content:hola|timestamp:1762921455414|isGroup:true
+id:fcee6da1-0a10-45bf-b1be-d7a515c28609|from:3|to:grupo 1|content:hi|timestamp:1762921455415|isGroup:true
+id:f37d73ca-f889-4533-b5d1-0fef8231b12b|from:3|to:grupo 1|content:hi|timestamp:1762921455415|isGroup:true
+id:059fb1f6-b7d8-4e59-ba46-9fe1413b4097|from:3|to:grupo 1|content:hi|timestamp:1762921455415|isGroup:true
+id:8caa2eab-0113-4ae4-93d2-58bab7a8c401|from:1|to:grupo 1|content:1|timestamp:1762921455416|isGroup:true
+id:915f7822-00e4-486a-9270-d204f6efbeb8|from:2|to:grupo 1|content:hola|timestamp:1762921455416|isGroup:true
+id:f4cd6b1a-b0fa-4079-aae4-aefdc4b4aecf|from:1|to:grupo 1|content:hola|timestamp:1762921455416|isGroup:true
+id:5ab7ebf6-0b5b-4f04-a0e9-bc4d5a1902be|from:1|to:grupo 1|content:hola|timestamp:1762921455416|isGroup:true
+id:0823d770-9aec-4825-94a9-ed71885766d6|from:2|to:grupo 1|content:como vas?|timestamp:1762921455411|isGroup:true

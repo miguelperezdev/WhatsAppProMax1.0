@@ -97,12 +97,13 @@ public class MainServer implements TCPConnectionListener {
         switch (type) {
             case "login" -> handleLogin(connection, data);
             case "logout" -> onDisconnect(connection);
-            case "private_message" -> handlePrivateMessage(data);
+            case "private_message" -> handlePrivateMessage(connection, data);
             case "group_message" -> handleGroupMessage(data);
-            case "create_group" -> handleCreateGroup(data);
-            case "join_group" -> handleJoinGroup(data);
-            case "get_online_users" -> handleGetOnlineUsers(data);
-            case "get_groups" -> handleGetGroups(data);
+            case "create_group" -> handleCreateGroup(connection, data);
+            case "join_group" -> handleJoinGroup(connection, data);
+            case "get_online_users" -> handleGetOnlineUsers(connection, data);
+            case "get_groups" -> handleGetGroups(connection, data);
+            case "get_history" -> handleGetHistory(connection, data);
             case "call_start" -> handleCallStart(data);
             case "call_accept" -> handleCallAccept(data);
             case "call_end" -> handleCallEnd(data);
@@ -131,7 +132,7 @@ public class MainServer implements TCPConnectionListener {
     // 💬 Mensajería
     // =====================================================
 
-    private void handlePrivateMessage(Map<String, String> data) {
+    private void handlePrivateMessage(TCPConnection connection, Map<String, String> data) {
         String from = data.get("from");
         String to = data.get("to");
         String content = data.get("content");
@@ -142,73 +143,38 @@ public class MainServer implements TCPConnectionListener {
 
         String msg = String.format("type:private_message|from:%s|to:%s|content:%s", from, to, content);
         sendObjectToUser(to, msg);
-        sendObjectToUser(from, "type:message_sent|to:" + to + "|status:ok");
-    }
-
-    private void handleGroupMessage(Map<String, String> data) {
-        String from = data.get("from");
-        String group = data.get("group");
-        String content = data.get("content");
-
-        if (from == null || group == null || content == null) return;
-
-        if (!chatManager.groupExists(group)) {
-            sendObjectToUser(from, "type:error|message:El grupo no existe.");
-            return;
-        }
-
-        chatManager.saveTextMessage(new Message(from, group, content, true));
-
-        String msg = String.format("type:group_message|from:%s|group:%s|content:%s", from, group, content);
-        for (String member : chatManager.getGroupMembers(group)) {
-            sendObjectToUser(member, msg);
-        }
-    }
-
-    private void handleAudioMessage(AudioMessage audioMessage) {
-        System.out.println("🎧 Audio recibido de " + audioMessage.getFrom() + " para " + audioMessage.getTo());
-        chatManager.saveAudioMessage(audioMessage);
-
-        if (audioMessage.isGroupMessage()) {
-            if (chatManager.groupExists(audioMessage.getTo())) {
-                for (String member : chatManager.getGroupMembers(audioMessage.getTo())) {
-                    sendObjectToUser(member, audioMessage);
-                }
-            }
-        } else {
-            sendObjectToUser(audioMessage.getTo(), audioMessage);
-            sendObjectToUser(audioMessage.getFrom(), audioMessage);
-        }
+        sendObjectToUser(from, "type:message_sent|to:" + to + "|status:ok|content:" + content);
     }
 
     // =====================================================
     // 👥 Grupos
     // =====================================================
 
-    private void handleCreateGroup(Map<String, String> data) {
+    private void handleCreateGroup(TCPConnection connection, Map<String, String> data) {
         String groupName = data.get("group_name");
         String creator = data.get("creator");
 
         if (groupName != null && creator != null && chatManager.createGroup(groupName, creator)) {
-            sendObjectToUser(creator, "type:group_created|group_name:" + groupName);
+            sendObjectToUser(creator, "type:group_created|group_name:" + groupName + "|status:ok");
             broadcastObject("type:system_message|content:Grupo '" + groupName + "' creado por " + creator);
         } else {
             sendObjectToUser(creator, "type:error|message:No se pudo crear el grupo '" + groupName + "'.");
         }
     }
 
-    private void handleJoinGroup(Map<String, String> data) {
+    private void handleJoinGroup(TCPConnection connection, Map<String, String> data) {
         String groupName = data.get("group_name");
         String username = data.get("username");
 
         if (groupName != null && username != null && chatManager.joinGroup(groupName, username)) {
+            sendObjectToUser(username, "type:join_group_success|group:" + groupName + "|status:ok");
             broadcastObject("type:system_message|content:" + username + " se unió al grupo " + groupName);
         } else {
             sendObjectToUser(username, "type:error|message:No se pudo unir al grupo '" + groupName + "'.");
         }
     }
 
-    private void handleGetOnlineUsers(Map<String, String> data) {
+    private void handleGetOnlineUsers(TCPConnection connection, Map<String, String> data) {
         String user = data.get("username");
         if (user != null) {
             String list = String.join(",", chatManager.getOnlineUsers());
@@ -216,12 +182,31 @@ public class MainServer implements TCPConnectionListener {
         }
     }
 
-    private void handleGetGroups(Map<String, String> data) {
+    private void handleGetGroups(TCPConnection connection, Map<String, String> data) {
         String user = data.get("username");
         if (user != null) {
             String list = String.join(",", chatManager.getAllGroups());
             sendObjectToUser(user, "type:groups_list|groups:" + list);
         }
+    }
+
+    private void handleGetHistory(TCPConnection connection, Map<String, String> data) {
+        String target = data.get("target");
+        String username = data.get("username");
+        String isGroupStr = data.get("isGroup");
+
+        if (target == null || username == null) return;
+
+        boolean isGroup = "true".equalsIgnoreCase(isGroupStr);
+        var messages = chatManager.getMessageHistory(target, isGroup);
+
+        StringBuilder historyStr = new StringBuilder();
+        for (Message msg : messages) {
+            if (historyStr.length() > 0) historyStr.append("|");
+            historyStr.append(msg.getFrom()).append(":").append(msg.getContent());
+        }
+
+        sendObjectToUser(username, "type:history|target:" + target + "|messages:" + historyStr.toString());
     }
 
     // =====================================================
@@ -286,6 +271,44 @@ public class MainServer implements TCPConnectionListener {
         String from = data.get("from");
         String callId = data.get("callId");
         System.out.println("🛑 Llamada finalizada por " + from + " (ID: " + callId + ")");
+    }
+
+    // =====================================================
+    // 🎵 Manejo de audio
+    // =====================================================
+
+    private void handleAudioMessage(AudioMessage audioMessage) {
+        if (audioMessage == null) return;
+        String from = audioMessage.getFrom();
+        String to = audioMessage.getTo();
+
+        chatManager.saveAudioMessage(audioMessage);
+        sendObjectToUser(to, audioMessage);
+        System.out.println("🎵 Mensaje de audio de " + from + " a " + to);
+    }
+
+    // =====================================================
+    // 👥 Mensajes de grupo
+    // =====================================================
+
+    private void handleGroupMessage(Map<String, String> data) {
+        String from = data.get("from");
+        String groupName = data.get("group_name");
+        String content = data.get("content");
+
+        if (from == null || groupName == null || content == null) return;
+
+        if (chatManager.groupExists(groupName)) {
+            chatManager.saveTextMessage(new Message(from, groupName, content, true));
+
+            String msg = String.format("type:group_message|from:%s|group:%s|content:%s", from, groupName, content);
+            for (String member : chatManager.getGroupMembers(groupName)) {
+                if (!member.equals(from)) {
+                    sendObjectToUser(member, msg);
+                }
+            }
+            sendObjectToUser(from, "type:message_sent|group:" + groupName + "|status:ok|content:" + content);
+        }
     }
 
     // =====================================================

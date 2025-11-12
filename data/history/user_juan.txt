@@ -1,0 +1,2 @@
+id:c2c11a9a-53f5-4afe-b2a2-f1c95403a99f|from:miguel|to:juan|content:hola|timestamp:1762913721756|isGroup:false
+id:bd19c266-05cf-4581-93c9-639292175378|from:andres|to:juan|content:hola|timestamp:1762913721755|isGroup:false

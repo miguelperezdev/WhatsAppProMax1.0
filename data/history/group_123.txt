@@ -1,0 +1,4 @@
+id:6c8219f7-5fad-4859-9366-cf18278311cf|from:3|to:123|content:hola grupo|timestamp:1762919471796|isGroup:true
+id:9b5d511b-0c06-452a-af10-f8033d2c9681|from:1|to:123|content:hola|timestamp:1762919471796|isGroup:true
+id:e9e6234a-8c22-44a2-a381-d864846e2e59|from:1|to:123|content:hola|timestamp:1762919471796|isGroup:true
+id:1e875956-34c9-4f59-b36c-d9979bbf4949|from:2|to:123|content:que pasa?|timestamp:1762919471795|isGroup:true
