@@ -197,6 +197,25 @@ app.post("/api/login", async (req, res) => {
   }
 })
 
+app.post("/api/addContact", async (req, res) => {
+  const { user, contact } = req.body
+  console.log(`👥 ${user} agregó a ${contact}`)
+
+  // Aquí podrías guardar en una lista, BD o memoria
+  // Por ejemplo:
+  if (!contacts[user]) contacts[user] = []
+  if (!contacts[contact]) contacts[contact] = []
+  if (!contacts[user].includes(contact)) contacts[user].push(contact)
+  if (!contacts[contact].includes(user)) contacts[contact].push(user)
+
+  // Enviar notificación a ambos
+  sendNotification(contact, `type:new_contact|from:${user}`)
+  sendNotification(user, `type:new_contact|from:${contact}`)
+
+  res.json({ ok: true, message: `Contacto ${contact} agregado` })
+})
+
+
 app.post("/api/sendMessage", async (req, res) => {
   const { from, to, content } = req.body
   console.log(`POST /api/sendMessage - from: ${from}, to: ${to}`)
@@ -228,7 +247,7 @@ app.post("/api/sendGroupMessage", async (req, res) => {
   }
 
   const escapedContent = String(content).replace(/\n/g, " ").replace(/\|/g, "_")
-  const cmd = `type:group_message|from:${from}|group_name:${group_name}|content:${escapedContent}`
+ const cmd = `type:group_message|from:${from}|group:${group_name}|content:${escapedContent}`
 
   try {
     const response = await sendCommand(from, cmd)
@@ -249,6 +268,7 @@ app.post("/api/createGroup", async (req, res) => {
   }
 
   const cmd = `type:create_group|group_name:${group_name}|creator:${creator}`
+
 
   try {
     const response = await sendCommand(creator, cmd)
